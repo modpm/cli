@@ -104,4 +104,4 @@ modpm-autoremove(1), modpm-history(1), modpm-info(1), modpm-init(1), modpm-insta
 ## COPYRIGHT
 
 Copyright 2025 Zefir Kirilov. modpm is available under the GPL-3.0 licence.
-See **https://github.com/modpm/lib/blob/main/COPYING** for the full licence text.
+See <https://github.com/modpm/cli/blob/main/COPYING> for the full licence text.
