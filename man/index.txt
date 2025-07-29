@@ -1,0 +1,12 @@
+modpm-autoremove(1)     modpm-autoremove.1
+modpm-history(1)        modpm-history.1
+modpm-info(1)           modpm-info.1
+modpm-init(1)           modpm-init.1
+modpm-install(1)        modpm-install.1
+modpm-list(1)           modpm-list.1
+modpm-mark(1)           modpm-mark.1
+modpm-reinstall(1)      modpm-reinstall.1
+modpm-remove(1)         modpm-remove.1
+modpm-search(1)         modpm-search.1
+modpm-upgrade(1)        modpm-upgrade.1
+modpm-versionlock(1)    modpm-versionlock.1
