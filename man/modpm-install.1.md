@@ -15,6 +15,9 @@ compatible version is selected.
 
 ## OPTIONS
 
+`--ignore-installed`
+:   Ignore packages that are already installed.
+
 `--skip-broken`
 :   Allow skipping packages that cannot be installed due to dependency conflicts.
 
