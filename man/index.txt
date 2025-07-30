@@ -1,3 +1,4 @@
+modpm(1)                modpm.1
 modpm-autoremove(1)     modpm-autoremove.1
 modpm-history(1)        modpm-history.1
 modpm-info(1)           modpm-info.1
