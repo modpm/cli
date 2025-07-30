@@ -8,7 +8,7 @@ modpm install \[options] \<package\[:version\]>...
 
 The `install` command installs one or more Modrinth projects as packages. modpm resolves and installs all required
 dependencies unless the target package is already installed. In that case, no dependency resolution is performed, and
-modpm only verifies that the package is present.
+modpm only verifies that the package is present. Only one version of each package may be installed at any given time.
 
 Each package may optionally specify a version using a colon (:) delimiter. If no version is specified, the latest
 compatible version is selected.
