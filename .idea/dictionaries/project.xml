@@ -4,6 +4,7 @@
       <w>autoremove</w>
       <w>libmodpm</w>
       <w>modpm</w>
+      <w>reinstalls</w>
       <w>versionlock</w>
     </words>
   </dictionary>
