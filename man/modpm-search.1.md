@@ -22,6 +22,9 @@ a search.
 `-n`, `--not-category=NAME,...`
 :   Exclude packages that have tagged with any of the specified categories.
 
+`-o`, `--open-source`
+:   Show only packages published under an open source licence.
+
 `--sort=<relevance|downloads|follows|newest|updated>`
 :    Sort results by relevance (default), downloads, follows, newest published, or most recently updated.
 
@@ -33,8 +36,9 @@ a search.
 
 ## EXAMPLES
 
-`modpm search -c=economy -n=game-mechanics bank`
-:   Search for packages matching `bank` tagged with `economy` but excluding those tagged with `game-mechanics`.
+`modpm search -c=economy -n=game-mechanics -o bank`
+:   Search for open source packages matching `bank` tagged with `economy` but excluding those tagged with
+`game-mechanics`.
 
 `modpm search -c social voice chat`
 :   Search for packages matching `voice chat` tagged with `social`.
