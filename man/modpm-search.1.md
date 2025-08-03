@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm search \[options] \[\<query>...]
+modpm search \[options] \[query...]
 
 modpm search --list-categories
 

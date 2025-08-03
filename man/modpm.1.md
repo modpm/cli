@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm \<command> \[options] \[\<args...>]
+modpm \<command> \[options] \[args...]
 
 ## DESCRIPTION
 

@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm reinstall \[options] \[\<package>...]
+modpm reinstall \[options] \[package...]
 
 ## DESCRIPTION
 

@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm mark \<subcommand> \[options] \<package>...
+modpm mark \<subcommand> \[options] \<package...>
 
 ## DESCRIPTION
 

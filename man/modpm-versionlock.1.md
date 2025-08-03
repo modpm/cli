@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm versionlock \<subcommand> \[\<package>...]
+modpm versionlock \<subcommand> \[package...]
 
 ## DESCRIPTION
 

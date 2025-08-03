@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm install \[options] \<package\[:version]>...
+modpm install \[options] \<package\[:version]...>
 
 ## DESCRIPTION
 
