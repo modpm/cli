@@ -1,3 +1,16 @@
 {
-  "version": "5"
+  "version": "5",
+  "specifiers": {
+    "npm:libmodpm@0.2": "0.2.0"
+  },
+  "npm": {
+    "libmodpm@0.2.0": {
+      "integrity": "sha512-liQezVUV0gQys8sLQ0pHobtAUkTFfdT/4dZnMEPaBcNnyO7Ytw7AlBV42qJWS+qUXfTcGxmaeCunc9l6E9Yi3g=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:libmodpm@0.2"
+    ]
+  }
 }

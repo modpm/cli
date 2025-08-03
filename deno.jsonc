@@ -2,8 +2,10 @@
   "name": "@modpm/cli",
   "version": "0.0.0-dev",
   "license": "GPL-3.0",
-  "exports": {
+  "imports": {
+    "libmodpm": "npm:libmodpm@^0.2.0"
   },
+  "exports": {},
   "tasks": {
   },
   "compilerOptions": {
