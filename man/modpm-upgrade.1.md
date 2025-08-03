@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm upgrade \[options] \[\<package>...]
+modpm upgrade \[options] \[package...]
 
 ## DESCRIPTION
 

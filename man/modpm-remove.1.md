@@ -2,7 +2,7 @@
 
 ## SYNOPSIS
 
-modpm remove \[options] \<package>...
+modpm remove \[options] \<package...>
 
 ## DESCRIPTION
 
