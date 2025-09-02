@@ -11,5 +11,6 @@
 	"name": "modpm",
 	"sourcePaths": [
 		"src"
-	]
+	],
+	"dflags": ["-Jbuild"]
 }
