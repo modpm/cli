@@ -2,18 +2,16 @@ module modpm.commands.init;
 
 import std.stdio;
 
-import commandr.program;
-import commandr.args;
+import modpm.commander;
 
-import modpm.commands.custom;
-
-public final class InitCommand : Command, CustomCommand {
+public final class InitCommand : Command {
     this() {
-        super("init", "Initialise a directory to manage.");
-    }
-
-    public override int action(ProgramArgs args) {
-        writeln("init");
-        return 0;
+        super("init")
+            .description("Initialise a directory to manage.")
+            .flag("-t, --test", "Test flag")
+            .action((args, options) {
+                writeln("Init command!");
+                return 0;
+            });
     }
 }
