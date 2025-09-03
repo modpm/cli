@@ -14,6 +14,7 @@ public class ArgumentException : Exception {
 
 public class Program : BaseCommand!Program {
     private Flag _verFlag;
+    private Command _verCommand;
     private Flag _helpFlag;
 
     public this(string name = null) {
@@ -25,16 +26,31 @@ public class Program : BaseCommand!Program {
         this._verFlag = verFlag;
         return this.ver(ver);
     }
+    
+    public auto ver(string ver, Flag verFlag, Command verCommand) {
+        this._verCommand = verCommand;
+        return this.ver(ver, verFlag);
+    }
 
     public auto ver(string ver, string option, string description) {
         auto names = BaseOption!Flag.parseName(option);
         return this.ver(ver, new Flag(names[0], names[1], description).preset(false));
     }
+    
+    public auto ver(string ver, string option, string description, Command verCommand) {
+        this._verCommand = verCommand;
+        return this.ver(ver, option, description);
+    }
 
     public auto ver(string ver) {
         this._version = ver;
-        this._verFlag = null;
+        if (this._verCommand is null)
+            this._verCommand = new VersionCommand(this);
         return this;
+    }
+    
+    public string getVersion() {
+        return this._version;
     }
 
     public void parse(string[] args) {
@@ -118,6 +134,7 @@ public class Program : BaseCommand!Program {
                 }
                 throw new ArgumentException("unexpected argument", arg);
             }
+            
             auto argument = this._args[i - firstArgument];
             if (cast(Argument) argument)
                 (cast(Argument) argument)._set(arg);
@@ -128,6 +145,9 @@ public class Program : BaseCommand!Program {
                     ~ " for argument " ~ argument.name());
             arguments._add(argument);
         }
+        
+        if (_verFlag !is null && _verCommand !is null && _verFlag.get())
+            return _verCommand._action(arguments, options);
         
         if (commandMode && cmd !is null)
             return cmd._action(arguments, options);
@@ -161,7 +181,7 @@ public class BaseCommand(T) {
     protected BaseArgument[] _args = [];
     protected Command[] _commands = [];
 
-    protected int function(ProgramArgs, ProgramOptions) _action = null;
+    protected int delegate(ProgramArgs, ProgramOptions) _action = null;
 
     public this(string name = null) {
         this._name = name;
@@ -237,7 +257,7 @@ public class BaseCommand(T) {
         return add(new Argument(name, description));
     }
 
-    public T action(int function(ProgramArgs, ProgramOptions) action) {
+    public T action(int delegate(ProgramArgs, ProgramOptions) action) {
         this._action = action;
         return cast(T) this;
     }
@@ -544,5 +564,17 @@ public class ProgramArgs {
     public string arg(string name) {
         auto args = this.args(name);
         return args.length > 0 ? args[0] : null;
+    }
+}
+
+public final class VersionCommand : Command {
+    public this(Program program) {
+        super(null)
+            .description("Show version information.");
+        super
+            .action((args, options) {
+                writeln(program.getVersion());
+                return 0;
+            });
     }
 }
