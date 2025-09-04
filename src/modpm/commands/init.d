@@ -9,7 +9,7 @@ public final class InitCommand : Command {
         super("init")
             .description("Initialise a directory to manage.")
             .flag("-t, --test", "Test flag")
-            .action((args, options) {
+            .action((args, options, program) {
                 writeln("Init command!");
                 return 0;
             });

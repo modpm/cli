@@ -6,16 +6,25 @@ import std.string;
 import std.algorithm.searching;
 import core.stdc.stdlib;
 
-public class ArgumentException : Exception {
+public class CommandException : Exception {
+    public this(string problem) {
+        super("error: " ~ problem);
+    }
+}
+
+public class ArgumentException : CommandException {
     public this(string problem, string name) {
-        super("error: " ~ problem ~ " '" ~ name ~ "'");
+        super(problem ~ " '" ~ name ~ "'");
     }
 }
 
 public class Program : BaseCommand!Program {
+    protected string _version;
     private Flag _verFlag;
-    private Command _verCommand;
     private Flag _helpFlag;
+
+    private Runnable _verProvider;
+    private Runnable _helpProvider = new HelpProvider();
 
     public this(string name = null) {
         super(name);
@@ -27,30 +36,41 @@ public class Program : BaseCommand!Program {
         return this.ver(ver);
     }
 
-    public auto ver(string ver, Flag verFlag, Command verCommand) {
-        this._verCommand = verCommand;
+    public auto ver(string ver) {
+        this._version = ver;
+        if (this._verProvider is null)
+            this._verProvider = new VersionProvider();
+        return this;
+    }
+
+    public auto ver(string ver, Flag verFlag, Runnable verProvider) {
+        this._verProvider = verProvider;
         return this.ver(ver, verFlag);
     }
 
     public auto ver(string ver, string option, string description) {
-        auto names = BaseOption!Flag.parseName(option);
+        auto names = Flag.parseName(option);
         return this.ver(ver, new Flag(names[0], names[1], description).preset(false));
     }
 
-    public auto ver(string ver, string option, string description, Command verCommand) {
-        this._verCommand = verCommand;
+    public auto ver(string ver, string option, string description, Runnable verProvider) {
+        this._verProvider = verProvider;
         return this.ver(ver, option, description);
     }
 
-    public auto ver(string ver) {
-        this._version = ver;
-        if (this._verCommand is null)
-            this._verCommand = new VersionCommand(this);
+    public string ver() {
+        return this._version;
+    }
+
+    public auto helpOption(Flag helpFlag) {
+        this.add(helpFlag);
+        this._helpFlag = helpFlag;
         return this;
     }
 
-    public string getVersion() {
-        return this._version;
+    public auto helpOption(string option, string description) {
+        auto names = Flag.parseName(option);
+        return this.helpOption(new Flag(names[0], names[1], description).preset(false));
     }
 
     public void parse(string[] args) {
@@ -58,7 +78,7 @@ public class Program : BaseCommand!Program {
             int status = handle(args);
             exit(status);
         }
-        catch (ArgumentException e) {
+        catch (CommandException e) {
             stderr.writefln(e.msg);
             exit(2);
         }
@@ -66,11 +86,10 @@ public class Program : BaseCommand!Program {
 
     private int handle(string[] args) {
         ProgramOptions options = new ProgramOptions();
-        ProgramArgs arguments = new ProgramArgs();
 
         const bool commandMode = _commands.length > 0;
         Command cmd = null;
-        int firstArgument = -1;
+        string[] arguments = [];
 
         for (int i = 1; i < args.length; ++i) {
             string arg = args[i];
@@ -113,49 +132,26 @@ public class Program : BaseCommand!Program {
                 continue;
             }
 
-            if (commandMode && cmd is null) {
-                cmd = getCommand(arg);
-                if (cmd is null)
-                    throw new ArgumentException("unknown command", arg);
-                continue;
-            }
-
-            if (this._args.length == 0)
-                throw new ArgumentException("unexpected argument", arg);
-
-            if (firstArgument == -1)
-                firstArgument = i;
-
-            if (i - firstArgument >= this._args.length) {
-                auto lastArgument = this._args[$];
-                if (cast(ArgumentList) lastArgument) {
-                    (cast(ArgumentList) lastArgument)._add(arg);
-                    continue;
-                }
-                throw new ArgumentException("unexpected argument", arg);
-            }
-
-            auto argument = this._args[i - firstArgument];
-            if (cast(Argument) argument)
-                (cast(Argument) argument)._set(arg);
-            else if (cast(ArgumentList) argument)
-                (cast(ArgumentList) argument)._add(arg);
-            else
-                throw new Exception("Unrecognised argument type " ~ typeid(argument).toString()
-                    ~ " for argument " ~ argument.name());
-            arguments._add(argument);
+            arguments ~= arg;
         }
 
-        if (_verFlag !is null && _verCommand !is null && _verFlag.get())
-            return _verCommand._action(arguments, options);
+        if (_verFlag !is null && _verProvider !is null && _verFlag.get())
+            return _verProvider.run(this, cmd, new ProgramArgs([]), options);
 
-        if (commandMode && cmd !is null)
-            return cmd._action(arguments, options);
-        else return this._action(arguments, options);
+        return this.parseArgs(arguments, options, this);
     }
 }
 
-public class BaseCommand(T) {
+public interface Helpable {
+    public string name();
+    public string description();
+    public Option[] options();
+    public Flag[] flags();
+    public BaseArgument[] args();
+    public Command[] commands();
+}
+
+public class BaseCommand(T) : Helpable {
     static assert(is(T : BaseCommand!T), "T must be a subclass of Command!T");
 
     protected static findOpt(T)(T[] arr, string query) {
@@ -174,18 +170,17 @@ public class BaseCommand(T) {
 
     protected string _name;
     protected string _description;
-    protected string _version;
 
     protected Option[] _options = [];
     protected Flag[] _flags = [];
     protected BaseArgument[] _args = [];
     protected Command[] _commands = [];
 
-    protected int delegate(ProgramArgs, ProgramOptions) _action = null;
+    protected int delegate(ProgramArgs, ProgramOptions, Program) _action = null;
 
     public this(string name = null) {
         this._name = name;
-        this._action = (args, options) => 0;
+        this._action = (a, b, c) => 0;
     }
 
     public T name(string name) {
@@ -193,9 +188,17 @@ public class BaseCommand(T) {
         return cast(T) this;
     }
 
+    public string name() {
+        return this._name;
+    }
+
     public T description(string description) {
         this._description = description;
         return cast(T) this;
+    }
+    
+    public string description() {
+        return this._description;
     }
 
     public T add(Option option) {
@@ -238,26 +241,76 @@ public class BaseCommand(T) {
         this._args ~= arg;
         return cast(T) this;
     }
-
-    public T flag(string name, string description) {
-        auto names = BaseOption!Flag.parseName(name);
-        return add(new Flag(names[0], names[1], description));
+    
+    public T flag(string name, string description, bool preset) {
+        auto names = Flag.parseName(name);
+        return add(new Flag(names[0], names[1], description).preset(preset));
     }
 
-    public T option(string shortOption, string longOption, string description) {
-        auto names = BaseOption!Option.parseName(shortOption ~ "," ~ longOption);
+    public T flag(string name, string description) {
+        return this.flag(name, description, false);
+    }
+    
+    public T option(string name, string description) {
+        auto names = Option.parseName(name);
         return add(new Option(names[0], names[1], description));
+    }
+
+    public T option(string name, string description, bool required) {
+        auto names = Option.parseName(name);
+        return add(new Option(names[0], names[1], description).required());
+    }
+    
+    public T option(string name, string description, string preset) {
+        auto names = Option.parseName(name);
+        return add(new Option(names[0], names[1], description).preset(preset));
     }
 
     public T command(Command command) {
         return add(command);
     }
 
-    public T argument(string name, string description) {
-        return add(new Argument(name, description));
+    public T argument(string name) {
+        return add(new Argument(name));
+    }
+    
+    public T argument(string name, bool required) {
+        return add(new Argument(name).required());
+    }
+    
+    public T argument(string name, string preset) {
+        return add(new Argument(name).preset(preset));
+    }
+    
+    public T argumentList(string name) {
+        return add(new ArgumentList(name));
+    }
+    
+    public T argumentList(string name, bool required) {
+        return add(new ArgumentList(name).required());
+    }
+    
+    public T argumentList(string name, string[] preset) {
+        return add(new ArgumentList(name).preset(preset));
+    }
+    
+    public Option[] options() {
+        return this._options;
+    }
+    
+    public Flag[] flags() {
+        return this._flags;
+    }
+    
+    public BaseArgument[] args() {
+        return this._args;
+    }
+    
+    public Command[] commands() {
+        return this._commands;
     }
 
-    public T action(int delegate(ProgramArgs, ProgramOptions) action) {
+    public T action(int delegate(ProgramArgs, ProgramOptions, Program) action) {
         this._action = action;
         return cast(T) this;
     }
@@ -267,6 +320,48 @@ public class BaseCommand(T) {
             if (cmd._name == name)
                 return cmd;
         return null;
+    }
+
+    private int parseArgs(string[] args, ProgramOptions options, Program program) {
+        const bool commandMode = _commands.length > 0;
+        if (commandMode) {
+            if (args.length == 0) {
+                if (program._helpFlag !is null && program._helpProvider !is null && program._helpFlag.get())
+                    return program._helpProvider.run(program, cast(Command) this, new ProgramArgs([]), options);
+                return this._action(new ProgramArgs([]), options, program);
+            }
+            Command cmd = getCommand(args[0]);
+            if (cmd is null)
+                throw new ArgumentException("unknown command", args[0]);
+            return cmd.parseArgs(args[1 .. $], options, program);
+        }
+        
+        ProgramArgs arguments = new ProgramArgs(this._args);
+        
+        if (program._helpFlag !is null && program._helpProvider !is null && program._helpFlag.get())
+            return program._helpProvider.run(program, cast(Command) this, arguments, options);
+
+        for (int i = 0; i < args.length; ++i) {
+            string arg = args[i];
+            if (i >= _args.length) {
+                auto lastArgument = _args[$ - 1];
+                if (cast(ArgumentList) lastArgument) {
+                    (cast(ArgumentList) lastArgument)._add(arg);
+                    continue;
+                }
+                throw new ArgumentException("unexpected argument", arg);
+            }
+            auto argument = this._args[i];
+            if (cast(Argument) argument)
+                (cast(Argument) argument)._set(arg);
+            else if (cast(ArgumentList) argument)
+                (cast(ArgumentList) argument)._add(arg);
+            else
+                throw new Exception("Unrecognised argument type " ~ typeid(argument).toString()
+                    ~ " for argument " ~ argument.name());
+        }
+
+        return this._action(arguments, options, program);
     }
 }
 
@@ -416,12 +511,10 @@ public class Flag : BaseOption!Flag {
 
 public class BaseArgument : Named {
     public const string _name;
-    public const string description;
     protected bool _required = false;
 
-    public this(string name, string description) {
+    public this(string name) {
         this._name = name;
-        this.description = description;
     }
 
     public string name() {
@@ -433,8 +526,8 @@ public class Argument : BaseArgument {
     protected string _value;
     protected string _default = null;
 
-    public this(string name, string description) {
-        super(name, description);
+    public this(string name) {
+        super(name);
     }
 
     public auto required() {
@@ -469,8 +562,8 @@ public class ArgumentList : BaseArgument {
     public string[] values = [];
     protected string[] _default = [];
 
-    public this(string name, string description) {
-        super(name, description);
+    public this(string name) {
+        super(name);
     }
 
     public auto required() {
@@ -542,11 +635,9 @@ public class ProgramOptions {
 public class ProgramArgs {
     private BaseArgument[string] _args;
 
-    public void _add(BaseArgument arg) {
-        foreach (a; _args)
-            if (a.name == arg.name)
-                return;
-        _args[arg.name] = arg;
+    public this(BaseArgument[] args) {
+        foreach (arg; args)
+            _args[arg.name] = arg;
     }
 
     public string[] args(string name) {
@@ -567,14 +658,44 @@ public class ProgramArgs {
     }
 }
 
-public final class VersionCommand : Command {
-    public this(Program program) {
-        super(null)
-            .description("Show version information.");
-        super
-            .action((args, options) {
-                writeln(program.getVersion());
-                return 0;
+public interface Runnable {
+    int run(Program program, Command command, ProgramArgs args, ProgramOptions options);
+}
+
+public class VersionProvider : Runnable {
+    public override int run(Program program, Command command, ProgramArgs args, ProgramOptions options) {
+        writeln(program.ver());
+        return 0;
+    }
+}
+
+public class HelpProvider : Runnable {
+    public override int run(Program program, Command command, ProgramArgs args, ProgramOptions options) {
+        Helpable cmd = cast(Helpable) (command is null ? program : command);
+        writeln("Help for " ~ cmd.name() ~ ": " ~ cmd.description());
+        return 0;
+    }
+}
+
+public class HelpCommand : Command {
+    public this() {
+        super("help")
+            .description("Show help for command.")
+            .argument("command")
+            .action((args, options, program) {
+                string cmdName = args.arg("command");
+                if (cmdName !is null) {
+                    Command cmd = program.getCommand(cmdName);
+                    if (cmd is null)
+                        throw new ArgumentException("unknown command", cmdName);
+                    if (program._helpProvider !is null)
+                        return program._helpProvider.run(program, cmd, args, options);
+                    return 1;
+                }
+                
+                if (program._helpProvider !is null)
+                    return program._helpProvider.run(program, cast(Command) program, args, options);
+                return 1;
             });
     }
 }
