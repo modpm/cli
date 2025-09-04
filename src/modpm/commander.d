@@ -26,7 +26,7 @@ public class Program : BaseCommand!Program {
         this._verFlag = verFlag;
         return this.ver(ver);
     }
-    
+
     public auto ver(string ver, Flag verFlag, Command verCommand) {
         this._verCommand = verCommand;
         return this.ver(ver, verFlag);
@@ -36,7 +36,7 @@ public class Program : BaseCommand!Program {
         auto names = BaseOption!Flag.parseName(option);
         return this.ver(ver, new Flag(names[0], names[1], description).preset(false));
     }
-    
+
     public auto ver(string ver, string option, string description, Command verCommand) {
         this._verCommand = verCommand;
         return this.ver(ver, option, description);
@@ -48,7 +48,7 @@ public class Program : BaseCommand!Program {
             this._verCommand = new VersionCommand(this);
         return this;
     }
-    
+
     public string getVersion() {
         return this._version;
     }
@@ -67,11 +67,11 @@ public class Program : BaseCommand!Program {
     private int handle(string[] args) {
         ProgramOptions options = new ProgramOptions();
         ProgramArgs arguments = new ProgramArgs();
-        
+
         const bool commandMode = _commands.length > 0;
         Command cmd = null;
         int firstArgument = -1;
-        
+
         for (int i = 1; i < args.length; ++i) {
             string arg = args[i];
             if (arg.startsWith("-")) {
@@ -112,20 +112,20 @@ public class Program : BaseCommand!Program {
                 options._add(opt);
                 continue;
             }
-            
+
             if (commandMode && cmd is null) {
                 cmd = getCommand(arg);
                 if (cmd is null)
                     throw new ArgumentException("unknown command", arg);
                 continue;
             }
-            
+
             if (this._args.length == 0)
                 throw new ArgumentException("unexpected argument", arg);
-            
+
             if (firstArgument == -1)
                 firstArgument = i;
-                
+
             if (i - firstArgument >= this._args.length) {
                 auto lastArgument = this._args[$];
                 if (cast(ArgumentList) lastArgument) {
@@ -134,7 +134,7 @@ public class Program : BaseCommand!Program {
                 }
                 throw new ArgumentException("unexpected argument", arg);
             }
-            
+
             auto argument = this._args[i - firstArgument];
             if (cast(Argument) argument)
                 (cast(Argument) argument)._set(arg);
@@ -145,10 +145,10 @@ public class Program : BaseCommand!Program {
                     ~ " for argument " ~ argument.name());
             arguments._add(argument);
         }
-        
+
         if (_verFlag !is null && _verCommand !is null && _verFlag.get())
             return _verCommand._action(arguments, options);
-        
+
         if (commandMode && cmd !is null)
             return cmd._action(arguments, options);
         else return this._action(arguments, options);
@@ -261,7 +261,7 @@ public class BaseCommand(T) {
         this._action = action;
         return cast(T) this;
     }
-    
+
     public Command getCommand(string name) {
         foreach (cmd; this._commands)
             if (cmd._name == name)
@@ -511,14 +511,14 @@ public class ProgramOptions {
                 return;
         _options ~= option;
     }
-    
+
     public void _add(Flag flag) {
         foreach (flg; _flags)
             if (flg._is(flag))
                 return;
         _flags ~= flag;
     }
-    
+
     public string[] options(string option) {
         foreach (opt; _options)
             if (opt._is(option))
@@ -541,7 +541,7 @@ public class ProgramOptions {
 
 public class ProgramArgs {
     private BaseArgument[string] _args;
-    
+
     public void _add(BaseArgument arg) {
         foreach (a; _args)
             if (a.name == arg.name)
