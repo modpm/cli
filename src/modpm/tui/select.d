@@ -42,9 +42,9 @@ class Select {
             foreach (i, opt; options) {
                 auto line = " " ~ opt ~ repeat(' ', maxLen - opt.length + 1).array;
                 if (i == selected)
-                    term.writef(" %s%s%s", "\x1b[7m", line, "\x1b[0m");
+                    term.writef("%s%s%s", "\x1b[7m", line, "\x1b[0m");
                 else
-                    term.writef(" %s", line);
+                    term.writef("%s", line);
 
                 if (i + 1 != options.length)
                     term.writeln();
