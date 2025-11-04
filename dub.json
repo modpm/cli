@@ -3,7 +3,9 @@
 		"Zefir Kirilov"
 	],
 	"copyright": "Copyright © 2025 Zefir Kirilov",
-	"dependencies": {},
+	"dependencies": {
+		"cmd": "~>0.1.1"
+	},
 	"description": "Modpm command-line interface",
 	"license": "GPL-3.0-only",
 	"name": "modpm",
