@@ -2,6 +2,7 @@ module modpm.tui.select;
 
 import core.stdc.stdlib;
 import std.algorithm;
+import std.conv;
 import std.range;
 import std.stdio;
 import std.string;
@@ -15,14 +16,18 @@ class Select(T = string) {
     private string delegate(T) _selectedFormat;
     private string delegate(T) _labelFormat;
 
+    private string defaultResolver(T val) {
+        return text(val);
+    }
+
     public this(immutable(T[]) opts) {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
 
-        this._selectedFormat = (v) => v;
-        this._labelFormat = (v) => v;
+        this._selectedFormat = &defaultResolver;
+        this._labelFormat = &defaultResolver;
     }
 
     static if (is(T == enum)) this() {
@@ -65,7 +70,7 @@ class Select(T = string) {
                 auto label = _labelFormat(opt);
                 auto line = label ~ repeat(' ', maxLen - label.length).array;
                 if (i == selected)
-                    term.writef("%s%s%s", "\x1b[7m", line, "\x1b[0m");
+                    term.writef("%s%s%s", "\x1b[107m\x1b[30m", line, "\x1b[0m");
                 else
                     term.writef("%s", line);
 
