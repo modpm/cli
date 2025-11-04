@@ -1,5 +1,7 @@
 module modpm.commands.init;
 
+import std.json;
+import std.net.curl;
 import std.stdio;
 import std.traits : EnumMembers;
 
@@ -18,7 +20,7 @@ public final class InitCommand : Command {
         Config.Type.SHADER: "Shader",
         Config.Type.DATA_PACK: "Data pack",
     ];
-    
+
     public static auto immutable LOADER_NAMES = [
         Config.Loader.BABRIC: "Babric",
         Config.Loader.BTA_BABRIC: "BTA (Babric)",
@@ -49,12 +51,12 @@ public final class InitCommand : Command {
         Config.Loader.VELOCITY: "Velocity",
         Config.Loader.WATERFALL: "Waterfall",
     ];
-    
+
     public static auto immutable ENV_NAMES = [
         Config.Environment.SERVER: "Server",
         Config.Environment.CLIENT: "Client",
     ];
-    
+
     public static auto immutable CHANNEL_NAMES = [
         ReleaseChannel.RELEASE: "Stable \x1b[2m– only stable versions\x1b[22m",
         ReleaseChannel.BETA:    "Beta   \x1b[2m– beta and stable versions\x1b[22m",
@@ -72,9 +74,9 @@ public final class InitCommand : Command {
                         .selectedFormat((v) => " ✔ " ~ TYPE_NAMES[v])
                         .get();
                     writeln();
-                    
+
                     auto compat = Config.TYPE_COMPATIBILITY[type];
-                    
+
                     Config.Loader loader;
                     if (compat.loaders.length == 1)
                         loader = compat.loaders[0];
@@ -86,7 +88,7 @@ public final class InitCommand : Command {
                             .get();
                         writeln();
                     }
-                    
+
                     Config.Environment env;
                     if (compat.environments.length == 1)
                         env = compat.environments[0];
@@ -98,16 +100,30 @@ public final class InitCommand : Command {
                             .get();
                         writeln();
                     }
-                    
+
                     writeln("\x1b[1mRelease channel\x1b[0m");
                     ReleaseChannel channel = new Select!ReleaseChannel()
                         .labelFormat((v) => "  " ~ CHANNEL_NAMES[v] ~ " ")
                         .selectedFormat((v) => " ✔ " ~ CHANNEL_NAMES[v])
                         .get();
                     writeln();
-                    
-                    writefln("Selected type=%s loader=%s env=%s channel=%s", type, loader, env, channel);
-                    
+
+                    write("\x1B[?25l\x1b[3m\x1b[2mFetching versions…\x1b[0m");
+                    stdout.flush();
+                    string[] versions;
+                    JSONValue versionManifest = parseJSON(get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"));
+
+                    foreach (ver; versionManifest["versions"].array)
+                        versions ~= ver["id"].str;
+                    write("\r\x1B[?25h");
+
+                    string ver = new Prompt("Select version: ")
+                        .completions(versions)
+                        .strict()
+                        .get();
+
+                    writefln("Selected type=%s loader=%s env=%s channel=%s ver=%s", type, loader, env, channel, ver);
+
                     return 0;
                 }
                 catch (UserInterruptionException e) {
