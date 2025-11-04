@@ -13,12 +13,16 @@ class Select(T = string) {
     private T[] options;
     private size_t selected;
     private string delegate(T) _selectedFormat;
+    private string delegate(T) _labelFormat;
 
     public this(immutable(T[]) opts) {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
+        
+        this._selectedFormat = (v) => v;
+        this._labelFormat = (v) => v;
     }
 
     static if (is(T == enum)) this() {
@@ -27,6 +31,11 @@ class Select(T = string) {
     
     public auto selectedFormat(string delegate(T) formatter) {
         this._selectedFormat = formatter;
+        return this;
+    }
+    
+    public auto labelFormat(string delegate(T) formatter) {
+        this._labelFormat = formatter;
         return this;
     }
 
@@ -38,9 +47,11 @@ class Select(T = string) {
         scope (exit) term.showCursor();
 
         size_t maxLen = 0;
-        foreach (opt; options)
-            if (opt.length > maxLen)
-                maxLen = opt.length;
+        foreach (opt; options) {
+            auto labelLength = _labelFormat(opt).length;
+            if (labelLength > maxLen)
+                maxLen = labelLength;
+        }
 
         int printed = 0;
 
@@ -51,7 +62,8 @@ class Select(T = string) {
             printed = 0;
 
             foreach (i, opt; options) {
-                auto line = "  " ~ cast(string) opt ~ repeat(' ', maxLen - opt.length + 1).array;
+                auto label = _labelFormat(opt);
+                auto line = label ~ repeat(' ', maxLen - label.length).array;
                 if (i == selected)
                     term.writef("%s%s%s", "\x1b[7m", line, "\x1b[0m");
                 else

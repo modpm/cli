@@ -15,6 +15,7 @@ public final class InitCommand : Command {
             .action((args) {
                 writeln("\x1b[1mType of packages that will be managed\x1b[0m");
                 Config.Type type = new Select!(Config.Type)()
+                    .labelFormat((v) => "  " ~ v ~ " ")
                     .selectedFormat((v) => " ✔ " ~ v)
                     .get();
                 writeln();
@@ -27,6 +28,7 @@ public final class InitCommand : Command {
                 else {
                     writefln("\x1b[1mSelect %s loader\x1b[0m", cast(string) type);
                     loader = new Select!(Config.Loader)(compat.loaders)
+                        .labelFormat((v) => "  " ~ v ~ " ")
                         .selectedFormat((v) => " ✔ " ~ v)
                         .get();
                     writeln();
@@ -38,6 +40,7 @@ public final class InitCommand : Command {
                 else {
                     writefln("\x1b[1mSelect environment\x1b[0m");
                     env = new Select!(Config.Environment)(compat.environments)
+                        .labelFormat((v) => "  " ~ v ~ " ")
                         .selectedFormat((v) => " ✔ " ~ v)
                         .get();
                     writeln();
