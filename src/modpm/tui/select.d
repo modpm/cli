@@ -12,7 +12,7 @@ class Select(T = string) {
     private T[] options;
     private size_t selected;
 
-    public this(T[] opts) {
+    public this(immutable(T[]) opts) {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
