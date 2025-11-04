@@ -20,7 +20,7 @@ class Select(T = string) {
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
-        
+
         this._selectedFormat = (v) => v;
         this._labelFormat = (v) => v;
     }
@@ -28,12 +28,12 @@ class Select(T = string) {
     static if (is(T == enum)) this() {
         this([EnumMembers!T]);
     }
-    
+
     public auto selectedFormat(string delegate(T) formatter) {
         this._selectedFormat = formatter;
         return this;
     }
-    
+
     public auto labelFormat(string delegate(T) formatter) {
         this._labelFormat = formatter;
         return this;
@@ -76,10 +76,7 @@ class Select(T = string) {
 
             term.flush();
 
-            dchar c;
-            try c = input.getch();
-            catch (UserInterruptionException)
-                exit(130);
+            dchar c = input.getch();
 
             switch (c) {
                 case KeyboardEvent.Key.UpArrow:
