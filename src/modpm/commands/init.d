@@ -13,10 +13,9 @@ public final class InitCommand : Command {
         super("init")
             .description("Initialise a directory to manage.")
             .action((args) {
-                string[] values = [EnumMembers!(Config.Loader)];
-                writeln("Please select loader");
-                auto o = new Select(values).get();
-                writeln(o);
+                writeln("Type of packages that will be managed");
+                Config.Type type = new Select!(Config.Type)([EnumMembers!(Config.Type)]).get();
+                writeln(type);
                 return 0;
             });
     }

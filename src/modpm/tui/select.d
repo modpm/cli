@@ -8,18 +8,18 @@ import std.string;
 
 import arsd.terminal;
 
-class Select {
-    private string[] options;
+class Select(T = string) {
+    private T[] options;
     private size_t selected;
 
-    public this(string[] opts) {
+    public this(T[] opts) {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
     }
 
-    public string get() {
+    public T get() {
         auto term = Terminal(ConsoleOutputType.linear);
         auto input = RealTimeConsoleInput(&term, ConsoleInputFlags.raw);
 
@@ -40,7 +40,7 @@ class Select {
             printed = 0;
 
             foreach (i, opt; options) {
-                auto line = " " ~ opt ~ repeat(' ', maxLen - opt.length + 1).array;
+                auto line = " " ~ cast(string) opt ~ repeat(' ', maxLen - opt.length + 1).array;
                 if (i == selected)
                     term.writef("%s%s%s", "\x1b[7m", line, "\x1b[0m");
                 else
