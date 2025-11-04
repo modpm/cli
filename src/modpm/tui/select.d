@@ -12,16 +12,18 @@ import arsd.terminal;
 class Select(T = string) {
     private T[] options;
     private size_t selected;
+    private string selectedFormat;
 
-    public this(immutable(T[]) opts) {
+    public this(immutable(T[]) opts, string selectedFormat = "%s") {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
+        this.selectedFormat = selectedFormat;
     }
 
-    static if (is(T == enum)) this() {
-        this([EnumMembers!T]);
+    static if (is(T == enum)) this(string selectedFormat = "%s") {
+        this([EnumMembers!T], selectedFormat);
     }
 
     public T get() {
@@ -45,7 +47,7 @@ class Select(T = string) {
             printed = 0;
 
             foreach (i, opt; options) {
-                auto line = " " ~ cast(string) opt ~ repeat(' ', maxLen - opt.length + 1).array;
+                auto line = "  " ~ cast(string) opt ~ repeat(' ', maxLen - opt.length + 1).array;
                 if (i == selected)
                     term.writef("%s%s%s", "\x1b[7m", line, "\x1b[0m");
                 else
@@ -78,7 +80,17 @@ class Select(T = string) {
                     break;
                 case '\r':
                 case '\n':
-                    term.writeln();
+                    term.moveTo(0, term.cursorY - printed + 1, ForceOption.automatic);
+
+                    foreach (i; 0 .. printed) {
+                        term.write("\x1b[2K");
+                        if (i < printed - 1)
+                            term.writeln();
+                    }
+                    term.moveTo(0, term.cursorY - (printed - 1), ForceOption.automatic);
+                    term.writefln(selectedFormat, cast(string) options[selected]);
+                    term.flush();
+
                     return options[selected];
                 default:
                     break;
