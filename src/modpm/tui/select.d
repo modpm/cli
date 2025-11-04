@@ -12,18 +12,22 @@ import arsd.terminal;
 class Select(T = string) {
     private T[] options;
     private size_t selected;
-    private string selectedFormat;
+    private string delegate(T) _selectedFormat;
 
-    public this(immutable(T[]) opts, string selectedFormat = "%s") {
+    public this(immutable(T[]) opts) {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
-        this.selectedFormat = selectedFormat;
     }
 
-    static if (is(T == enum)) this(string selectedFormat = "%s") {
-        this([EnumMembers!T], selectedFormat);
+    static if (is(T == enum)) this() {
+        this([EnumMembers!T]);
+    }
+    
+    public auto selectedFormat(string delegate(T) formatter) {
+        this._selectedFormat = formatter;
+        return this;
     }
 
     public T get() {
@@ -88,7 +92,7 @@ class Select(T = string) {
                             term.writeln();
                     }
                     term.moveTo(0, term.cursorY - (printed - 1), ForceOption.automatic);
-                    term.writefln(selectedFormat, cast(string) options[selected]);
+                    term.writeln(_selectedFormat(options[selected]));
                     term.flush();
 
                     return options[selected];
