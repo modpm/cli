@@ -5,13 +5,16 @@
 	"copyright": "Copyright © 2025 Zefir Kirilov",
 	"dependencies": {
 		"arsd-official:terminal": "~>12.1.0",
-		"cmd": "~>0.1.1"
+		"cmd": "~>0.1.1",
+		"libmodpm": "~models"
 	},
 	"description": "Modpm command-line interface",
+	"dflags": [
+		"-Jbuild"
+	],
 	"license": "GPL-3.0-only",
 	"name": "modpm",
 	"sourcePaths": [
 		"src"
-	],
-	"dflags": ["-Jbuild"]
+	]
 }

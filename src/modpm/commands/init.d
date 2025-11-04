@@ -1,8 +1,10 @@
 module modpm.commands.init;
 
 import std.stdio;
+import std.traits : EnumMembers;
 
 import cmd;
+import libmodpm.inventory.Config;
 import modpm.tui.prompt;
 import modpm.tui.select;
 
@@ -11,7 +13,9 @@ public final class InitCommand : Command {
         super("init")
             .description("Initialise a directory to manage.")
             .action((args) {
-                auto o = new Select("Please select", ["Hello world!", "Hi", "A much longer option"]).get();
+                string[] values = [EnumMembers!(Config.Loader)];
+                writeln("Please select loader");
+                auto o = new Select(values).get();
                 writeln(o);
                 return 0;
             });

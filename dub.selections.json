@@ -2,6 +2,7 @@
 	"fileVersion": 1,
 	"versions": {
 		"arsd-official": "12.1.0",
-		"cmd": "0.1.1"
+		"cmd": "0.1.1",
+		"libmodpm": "~models"
 	}
 }
