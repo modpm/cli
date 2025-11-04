@@ -115,9 +115,9 @@ public final class InitCommand : Command {
 
                     foreach (ver; versionManifest["versions"].array)
                         versions ~= ver["id"].str;
-                    write("\r\x1B[?25h");
+                    write("\x1B[?25h\r");
 
-                    string ver = new Prompt("Select version: ")
+                    string ver = new Prompt("\x1b[1mSelect version:\x1b[0m ")
                         .completions(versions)
                         .strict()
                         .get();
