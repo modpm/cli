@@ -49,6 +49,7 @@ public class Prompt {
             string colorStart = (_strictMode && buf.length != 0) ? (valid ? "\x1b[32m" : "\x1b[31m") : "";
             string colorEnd = colorStart.length != 0 ? "\x1b[0m" : "";
             terminal.write(colorStart ~ buf ~ colorEnd);
+            int bufEndX = terminal.cursorX;
 
             string sugg;
             foreach (c; _completions)
@@ -63,11 +64,18 @@ public class Prompt {
                 terminal.write("\x1b[0m");
             }
 
-            terminal.moveTo(cast(int)(message.length + pos), terminal.cursorY);
+            terminal.moveTo(0, terminal.cursorY);
+            terminal.write(message);
+            terminal.write(colorStart ~ buf[0..pos] ~ colorEnd);
+            int cursorX = terminal.cursorX;
+            int cursorY = terminal.cursorY;
+
+            terminal.moveTo(cursorX, cursorY);
             terminal.showCursor();
             terminal.flush();
 
             auto ch = input.getch();
+
             switch (ch) {
                 case '\t':
                     if (sugg.length != 0) {
@@ -86,7 +94,7 @@ public class Prompt {
                 case '\n':
                 case '\r':
                     if (!_strictMode || _completions.canFind(buf)) {
-                        terminal.moveTo(cast(int)(message.length + buf.length), terminal.cursorY);
+                        terminal.moveTo(bufEndX, terminal.cursorY);
                         terminal.clearToEndOfLine();
                         terminal.writeln("");
                         return (_formatter !is null) ? _formatter(buf) : buf;
@@ -116,9 +124,9 @@ public class Prompt {
                 case KeyboardEvent.Key.End:
                     pos = buf.length;
                     break;
-                    
+
                 case '\0': break;
-                
+
                 case '\u000b':
                     buf = buf[0 .. pos];
                     break;
