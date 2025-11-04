@@ -9,14 +9,12 @@ import std.string;
 import arsd.terminal;
 
 class Select {
-    private string message;
     private string[] options;
     private size_t selected;
 
-    public this(string message, string[] opts) {
+    public this(string[] opts) {
         if (opts.length < 2)
             throw new Exception("Select requires at least 2 options");
-        this.message = message;
         this.options = opts.dup;
         this.selected = 0;
     }
@@ -40,8 +38,6 @@ class Select {
                 term.moveTo(0, term.cursorY - printed + 1, ForceOption.automatic);
 
             printed = 0;
-            term.writeln(message);
-            ++printed;
 
             foreach (i, opt; options) {
                 auto line = " " ~ opt ~ repeat(' ', maxLen - opt.length + 1).array;
