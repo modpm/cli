@@ -13,9 +13,32 @@ public final class InitCommand : Command {
         super("init")
             .description("Initialise a directory to manage.")
             .action((args) {
-                writeln("Type of packages that will be managed");
-                Config.Type type = new Select!(Config.Type)([EnumMembers!(Config.Type)]).get();
-                writeln(type);
+                writeln("\x1b[1mType of packages that will be managed\x1b[0m");
+                Config.Type type = new Select!(Config.Type)().get();
+                writeln();
+                
+                auto compat = Config.TYPE_COMPATIBILITY[type];
+                
+                Config.Loader loader;
+                if (compat.loaders.length == 1)
+                    loader = compat.loaders[0];
+                else {
+                    writefln("\x1b[1mSelect %s loader\x1b[0m", cast(string) type);
+                    loader = new Select!(Config.Loader)(compat.loaders).get();
+                    writeln();
+                }
+                
+                Config.Environment env;
+                if (compat.environments.length == 1)
+                    env = compat.environments[0];
+                else {
+                    writefln("\x1b[1mSelect environment\x1b[0m");
+                    env = new Select!(Config.Environment)(compat.environments).get();
+                    writeln();
+                }
+                
+                writefln("Selected type=%s loader=%s env=%s", type, loader, env);
+                
                 return 0;
             });
     }
