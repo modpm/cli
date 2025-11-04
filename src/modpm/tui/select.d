@@ -1,11 +1,12 @@
 module modpm.tui.select;
 
-import arsd.terminal;
-import std.stdio;
+import core.stdc.stdlib;
 import std.algorithm;
 import std.range;
+import std.stdio;
 import std.string;
-import core.stdc.stdlib;
+
+import arsd.terminal;
 
 class Select {
     private string message;
