@@ -5,6 +5,7 @@ import std.algorithm;
 import std.range;
 import std.stdio;
 import std.string;
+import std.traits : EnumMembers;
 
 import arsd.terminal;
 
@@ -17,6 +18,10 @@ class Select(T = string) {
             throw new Exception("Select requires at least 2 options");
         this.options = opts.dup;
         this.selected = 0;
+    }
+
+    static if (is(T == enum)) this() {
+        this([EnumMembers!T]);
     }
 
     public T get() {
