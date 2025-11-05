@@ -111,10 +111,10 @@ public final class InitCommand : Command {
                     write("\x1B[?25l\x1b[3m\x1b[2mFetching versions…\x1b[0m");
                     stdout.flush();
                     string[] versions;
-                    JSONValue versionManifest = parseJSON(get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"));
+                    JSONValue versionManifest = parseJSON(get("https://api.modrinth.com/v2/tag/game_version"));
 
-                    foreach (ver; versionManifest["versions"].array)
-                        versions ~= ver["id"].str;
+                    foreach (ver; versionManifest.array)
+                        versions ~= ver["version"].str;
                     write("\x1B[?25h\r");
 
                     string ver = new Prompt("\x1b[1mSelect version:\x1b[0m ")
