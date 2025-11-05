@@ -2,33 +2,54 @@ module modpm.tui.prompt;
 
 import arsd.terminal;
 import std.string : strip;
-import std.algorithm : startsWith, canFind;
+import std.algorithm : startsWith;
 import std.conv : to;
 
 public class Prompt {
     private string message;
     private string delegate(string) _formatter;
-    private string[] _completions;
-    private bool _strictMode = false;
+    private string delegate(string) _completions;
+    private bool delegate(string) _validator;
+    private string currentSuggestion;
 
     public this(string message) {
         this.message = message;
         this._formatter = (s) => s.strip();
-        this._completions = [];
     }
 
-    public Prompt completions(string[] comps) {
-        _completions = comps;
+    public Prompt completions(string[] values) {
+        _completions = (string buf) {
+            foreach (s; values) {
+                if (s.startsWith(buf))
+                    return s;
+            }
+            return "";
+        };
         return this;
     }
 
-    public Prompt formatter(string delegate(string) dg) {
-        _formatter = dg;
+    public Prompt completions(string delegate(string) func) {
+        _completions = func;
         return this;
     }
 
-    public Prompt strict(bool strict = true) {
-        _strictMode = strict;
+    public Prompt validator(string[] validValues) {
+        _validator = (string buf) {
+            foreach (v; validValues)
+                if (v == buf)
+                    return true;
+            return false;
+        };
+        return this;
+    }
+
+    public Prompt validator(bool delegate(string) func) {
+        _validator = func;
+        return this;
+    }
+
+    public Prompt formatter(string delegate(string) func) {
+        _formatter = func;
         return this;
     }
 
@@ -45,18 +66,19 @@ public class Prompt {
             terminal.clearToEndOfLine();
             terminal.write(message);
 
-            bool valid = _strictMode && _completions.canFind(buf);
-            string colorStart = (_strictMode && buf.length != 0) ? (valid ? "\x1b[32m" : "\x1b[31m") : "";
+            string colorStart = (_validator !is null) ? (_validator(buf) ? "\x1b[32m" : "\x1b[31m") : "";
             string colorEnd = colorStart.length != 0 ? "\x1b[0m" : "";
             terminal.write(colorStart ~ buf ~ colorEnd);
             int bufEndX = terminal.cursorX;
 
             string sugg;
-            foreach (c; _completions)
-                if (c.startsWith(buf)) {
-                    sugg = c[buf.length .. $];
-                    break;
-                }
+            if (_completions !is null) {
+                if (currentSuggestion.length == 0 || !currentSuggestion.startsWith(buf))
+                    currentSuggestion = _completions(buf);
+
+                if (currentSuggestion.startsWith(buf))
+                    sugg = currentSuggestion[buf.length .. $];
+            }
 
             if (sugg.length != 0) {
                 terminal.write("\x1b[90m");
@@ -81,6 +103,7 @@ public class Prompt {
                     if (sugg.length != 0) {
                         buf ~= sugg;
                         pos = buf.length;
+                        currentSuggestion = "";
                     }
                     break;
 
@@ -88,12 +111,14 @@ public class Prompt {
                     if (pos > 0) {
                         buf = buf[0 .. pos-1] ~ buf[pos .. $];
                         pos--;
+                        if (!currentSuggestion.startsWith(buf))
+                            currentSuggestion = "";
                     }
                     break;
 
                 case '\n':
                 case '\r':
-                    if (!_strictMode || _completions.canFind(buf)) {
+                    if (_validator is null || _validator(buf)) {
                         terminal.moveTo(bufEndX, terminal.cursorY);
                         terminal.clearToEndOfLine();
                         terminal.writeln("");
@@ -102,7 +127,11 @@ public class Prompt {
                     break;
 
                 case KeyboardEvent.Key.Delete:
-                    if (pos < buf.length) buf = buf[0 .. pos] ~ buf[pos+1 .. $];
+                    if (pos < buf.length) {
+                        buf = buf[0 .. pos] ~ buf[pos+1 .. $];
+                        if (!currentSuggestion.startsWith(buf))
+                            currentSuggestion = "";
+                    }
                     break;
 
                 case KeyboardEvent.Key.LeftArrow:
@@ -114,6 +143,7 @@ public class Prompt {
                     else if (pos == buf.length && sugg.length != 0) {
                         buf ~= sugg;
                         pos = buf.length;
+                        currentSuggestion = "";
                     }
                     break;
 
@@ -129,11 +159,15 @@ public class Prompt {
 
                 case '\u000b':
                     buf = buf[0 .. pos];
+                    if (!currentSuggestion.startsWith(buf))
+                        currentSuggestion = "";
                     break;
 
                 default:
                     buf = buf[0 .. pos] ~ ch.to!string ~ buf[pos .. $];
                     pos++;
+                    if (!currentSuggestion.startsWith(buf))
+                        currentSuggestion = "";
                     break;
             }
         }

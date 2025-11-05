@@ -119,7 +119,7 @@ public final class InitCommand : Command {
 
                     string ver = new Prompt("\x1b[1mSelect version:\x1b[0m ")
                         .completions(versions)
-                        .strict()
+                        .validator(versions)
                         .get();
 
                     writefln("Selected type=%s loader=%s env=%s channel=%s ver=%s", type, loader, env, channel, ver);
