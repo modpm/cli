@@ -110,7 +110,7 @@ public class Prompt {
                 case '\b':
                     if (pos > 0) {
                         buf = buf[0 .. pos-1] ~ buf[pos .. $];
-                        pos--;
+                        --pos;
                         if (!currentSuggestion.startsWith(buf))
                             currentSuggestion = "";
                     }
@@ -135,11 +135,11 @@ public class Prompt {
                     break;
 
                 case KeyboardEvent.Key.LeftArrow:
-                    if (pos > 0) pos--;
+                    if (pos > 0) --pos;
                     break;
 
                 case KeyboardEvent.Key.RightArrow:
-                    if (pos < buf.length) pos++;
+                    if (pos < buf.length) ++pos;
                     else if (pos == buf.length && sugg.length != 0) {
                         buf ~= sugg;
                         pos = buf.length;
@@ -165,7 +165,7 @@ public class Prompt {
 
                 default:
                     buf = buf[0 .. pos] ~ ch.to!string ~ buf[pos .. $];
-                    pos++;
+                    ++pos;
                     if (!currentSuggestion.startsWith(buf))
                         currentSuggestion = "";
                     break;
