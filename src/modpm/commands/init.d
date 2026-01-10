@@ -39,7 +39,7 @@ public final class InitCommand : Command {
         Config.Loader.MODLOADER: "Risugami’s ModLoader",
         Config.Loader.NEOFORGE: "NeoForge",
         Config.Loader.NILLOADER: "NilLoader",
-        Config.Loader.OPTIFINE: "Optifine",
+        Config.Loader.OPTIFINE: "OptiFine",
         Config.Loader.ORNITHE: "Ornithe",
         Config.Loader.PAPER: "Paper",
         Config.Loader.PURPUR: "Purpur",
